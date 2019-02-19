@@ -24,7 +24,6 @@ def parseError(str):
 """Read single camera configuration."""
 def readCameraConfig(config):
     cam = CameraConfig()
-
     # name
     try:
         cam.name = config["name"]
@@ -41,7 +40,6 @@ def readCameraConfig(config):
         return False
 
     cam.config = config
-
     cameraConfigs.append(cam)
     return True
 
@@ -148,7 +146,6 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
             sd.putNumberArray('tape1', neg)
             sd.putNumberArray('tape2', neg)
     elif len(cnts) == 1: # if there is 1 contour
-        print("asdf")
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
         rect = cv2.minAreaRect(c)
@@ -157,7 +154,6 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         # for these refer to https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
         if len(cnts) >= 1:
             center = FindCenter(box)
-            print("elif 1 tape")
             if center[0] < 80: # if there is only one tape detects wheter it is on the left or right
                 centerR = center
                 centerL = neg
@@ -199,13 +195,15 @@ if __name__ == "__main__":
 
     #Start first camera
     print("Connecting to camera 0")
+    exp = 4
     cs = CameraServer.getInstance()
     cs.enableLogging()
     Camera = UsbCamera('Cam 0', 0)
-    Camera.setExposureManual(4)
+    Camera.setExposureManual(exp)
     Camera.setResolution(160,120)
     cs.addCamera(Camera)
-
+    sd.putNumber('ExpAuto', 0)
+    sd.putNumberArray('ExpAutomatic', [0,0])
     print("connected")
 
     CvSink = cs.getVideo()
@@ -217,10 +215,19 @@ if __name__ == "__main__":
     # loop forever
     while True:
 
-        GotFrame, img = CvSink.grabFrame(img)
-        if GotFrame  == 0:
-            outputStream.notifyError(CvSink.getError())
-            continue
-        img = TrackTheTape(img, SmartDashBoardValues)
+        if sd.getNumber('ExpAuto') == 0
+            Camera.setExposureManual(exp)
+            GotFrame, img = CvSink.grabFrame(img)
+            if GotFrame  == 0:
+                outputStream.notifyError(CvSink.getError())
+                continue
+            img = TrackTheTape(img, SmartDashBoardValues)
+        elif sd.getNumber("ExpAuto") == 1
+            neg = [-1,-1] # just a negative array to use when no tape is detected
+            Camera.setExposureAuto()
+            sd.putNumberArray('tape1', neg)
+            sd.putNumberArray('tape2', neg)
 
+        else:
+            print("")
         outputStream.putFrame(img)
