@@ -1,0 +1,13 @@
+if len(cnts) worked
+
+Traceback (most recent call last):
+
+  File "./uploaded.py", line 230, in <module>
+
+    img = TrackTheTape(img, SmartDashBoardValues)
+
+  File "./uploaded.py", line 159, in TrackTheTape
+
+    cnts.sort()
+
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all
