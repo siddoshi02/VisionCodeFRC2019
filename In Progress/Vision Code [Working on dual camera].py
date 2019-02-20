@@ -43,6 +43,46 @@ def readCameraConfig(config):
     cameraConfigs.append(cam)
     return True
 
+def configCamera():
+    cam = CameraConfig()
+    # name
+    try:
+        cam.name = config["name"]
+
+    except KeyError:
+        parseError("could not read camera name")
+        return False
+
+    # path
+    try:
+        cam.path = config["path"]
+    except KeyError:
+        parseError("camera '{}': could not read path".format(cam.name))
+        return False
+
+    cam.config = config
+    cameraConfigs.append(cam)
+
+    cam2 = CameraConfig()
+    # name
+    try:
+        cam2.name = cam2
+
+    except KeyError:
+        parseError("could not read camera name")
+        return False
+
+    # path
+    try:
+        cam2.path = /dev/video1
+    except KeyError:
+        parseError("camera '{}': could not read path".format(cam.name))
+        return False
+
+    cam2.config = config
+    cameraConfigs.append(cam2)
+    return True
+
 """Read configuration file."""
 def readConfig():
     global team
@@ -84,7 +124,7 @@ def readConfig():
         parseError("could not read cameras")
         return False
     for camera in cameras:
-        if not readCameraConfig(camera):
+        if not configCamera():
             return False
 
     return True
@@ -206,9 +246,22 @@ if __name__ == "__main__":
     CvSink = cs.getVideo()
     outputStream = cs.putVideo("Processed Frames", 160,120)
 
+    #Start second camera
+    print("Connecting to camera 2")
+    cs = CameraServer.getInstance()
+    cs.enableLogging()
+    Camera2 = UsbCamera('Cam 2', 0)
+    Camera2.setResolution(160,120)
+    cs.addCamera(Camera2)
+    print("connected")
+    CvSink2 = cs.getVideo()
+    outputStream2 = cs.putVideo("Processed Frames", 160,120)
+
     #buffers to store img data
     img = np.zeros(shape=(160,120,3), dtype=np.uint8)
     ExpStatus = sp.getNumber('ExpAuto', 0)
+    img2 = np.zeros(shape=(160,120,3), dtype=np.uint8)
+
     # loop forever
     while True:
         ExpAuto = sp.getNumber('ExpAuto', 0)
@@ -236,4 +289,10 @@ if __name__ == "__main__":
 
         else:
             print("")
+
+        GotFrame2, img2 = CvSink.grabFrame(img)
+        if GotFrame2  == 0:
+            outputStream.notifyError(CvSink.getError())
+            continue
         outputStream.putFrame(img)
+        outputStream2.putFrame(img2)
