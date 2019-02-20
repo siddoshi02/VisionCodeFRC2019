@@ -135,15 +135,15 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
             if centerL[0]>centerR[0]: # finds out which tape is on the left and right by comparing x coordinates
                 centerL,centerR = centerR,centerL
                 box,box2 = box2,box
-            sd.putNumberArray('tape1', centerL)
-            sd.putNumberArray('tape2', centerR)
+            tape1 = centerL
+            tape2 = centerR
             cv2.drawContours(img,[box],0,(0,0,255),2)
             cv2.drawContours(img,[box2],0,(0,255,0),2)
         else:
             # sd.putNumberArray('tape1', neg)
             # sd.putNumberArray('tape2', neg)
-            sd.putNumberArray('tape1', neg)
-            sd.putNumberArray('tape2', neg)
+            tape1 = neg
+            tape2 = neg
     elif len(cnts) == 1: # if there is 1 contour
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
@@ -161,17 +161,19 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
                 centerL = center
                 centerR = neg
                 cv2.drawContours(img,[box],0,(0,0,255),2)
-            sd.putNumberArray('tape1', centerL)
-            sd.putNumberArray('tape2', centerR)
+            tape1 = centerL
+            tape2 = centerR
         else:
             # sd.putNumberArray('tape1', neg)
             # sd.putNumberArray('tape2', neg)
-            sd.putNumberArray('tape1', neg)
-            sd.putNumberArray('tape2', neg)
+            tape1 = neg
+            tape2 = neg
 
     else: # when no tape is detected put the neg array everywhere
-        sd.putNumberArray('tape1', neg)
-        sd.putNumberArray('tape2', neg)
+        tape1 = neg
+        tape2 = neg
+    sd.putNumberArray('tape1', centerL)
+    sd.putNumberArray('tape2', centerR)
     return img
 
 
