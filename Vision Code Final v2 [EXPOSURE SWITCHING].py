@@ -41,13 +41,47 @@ def readCameraConfig(config):
 
     cam.config = config
     cameraConfigs.append(cam)
+
+    cam2 = CameraConfig()
+    # name
+    try:
+        cam2.name = "Cam2"
+
+    except KeyError:
+        parseError("could not read camera name")
+        return False
+
+    # path
+    try:
+        cam2.path = "/dev/video1"
+    except KeyError:
+        parseError("camera '{}': could not read path".format(cam.name))
+        return False
+
+    cam2.config = config
+    cameraConfigs.append(cam2)
+
     return True
+
+"""Start running the camera."""
+def startCamera(config):
+    print("Starting camera '{}' on {}".format(config.name, config.path))
+    inst = CameraServer.getInstance()
+    camera = UsbCamera(config.name, config.path)
+    server = inst.startAutomaticCapture(camera=camera, return_server=True)
+
+    camera.setConfigJson(json.dumps(config.config))
+    camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen)
+    #
+    # if config.streamConfig is not None:
+    #     server.setConfigJson(json.dumps(config.streamConfig))
+
+    return camera
 
 """Read configuration file."""
 def readConfig():
     global team
     global server
-
     # parse file
     try:
         with open(configFile, "rt") as f:
@@ -90,21 +124,6 @@ def readConfig():
 
     return True
 
-    """Start running the camera."""
-    def startCamera(config):
-        print("Starting camera '{}' on {}".format(config.name, config.path))
-        inst = CameraServer.getInstance()
-        camera = UsbCamera(config.name, config.path)
-        server = inst.startAutomaticCapture(camera=camera, return_server=True)
-
-        camera.setConfigJson(json.dumps(config.config))
-        camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen)
-
-        if config.streamConfig is not None:
-            server.setConfigJson(json.dumps(config.streamConfig))
-
-        return camera
-
 # returns an array of the center coordinates
 def FindCenter(box):
     center = [0,0]
@@ -116,6 +135,9 @@ def FindCenter(box):
     return center
 
 def TrackTheTape(frame, sd): # does the opencv image proccessing
+    neg = [-1,-1] # just a negative array to use when no tape is detected
+    centerL = neg
+    centerR = neg
     Exp = sd.getNumber('ExpAuto', 0)
     TapeLower= (65,75,75) # the lower bounds of the hsv
     TapeUpper = (80,255,255) # the upper bounds of hsv values
@@ -133,7 +155,6 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
     minArea = 75 # minimum area of either of the tapes
     a, cnts , b= cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     center = None
-    neg = [-1,-1] # just a negative array to use when no tape is detected
     if len(cnts) > 1: # if there is more than 1 contour
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
@@ -151,15 +172,15 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
             if centerL[0]>centerR[0]: # finds out which tape is on the left and right by comparing x coordinates
                 centerL,centerR = centerR,centerL
                 box,box2 = box2,box
-            sd.putNumberArray('tape1', centerL)
-            sd.putNumberArray('tape2', centerR)
+            tape1 = centerL
+            tape2 = centerR
             cv2.drawContours(img,[box],0,(0,0,255),2)
             cv2.drawContours(img,[box2],0,(0,255,0),2)
         else:
             # sd.putNumberArray('tape1', neg)
             # sd.putNumberArray('tape2', neg)
-            sd.putNumberArray('tape1', neg)
-            sd.putNumberArray('tape2', neg)
+            tape1 = neg
+            tape2 = neg
     elif len(cnts) == 1: # if there is 1 contour
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
@@ -177,17 +198,19 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
                 centerL = center
                 centerR = neg
                 cv2.drawContours(img,[box],0,(0,0,255),2)
-            sd.putNumberArray('tape1', centerL)
-            sd.putNumberArray('tape2', centerR)
+            tape1 = centerL
+            tape2 = centerR
         else:
             # sd.putNumberArray('tape1', neg)
             # sd.putNumberArray('tape2', neg)
-            sd.putNumberArray('tape1', neg)
-            sd.putNumberArray('tape2', neg)
+            tape1 = neg
+            tape2 = neg
 
     else: # when no tape is detected put the neg array everywhere
-        sd.putNumberArray('tape1', neg)
-        sd.putNumberArray('tape2', neg)
+        tape1 = neg
+        tape2 = neg
+    sd.putNumberArray('tape1', centerL)
+    sd.putNumberArray('tape2', centerR)
     return img
 
 
@@ -212,7 +235,7 @@ if __name__ == "__main__":
     exp = 4
     cs = CameraServer.getInstance()
     cs.enableLogging()
-    Camera = UsbCamera('Cam 0', 0)
+    Camera = UsbCamera('rPi Camera 0', 0)
     Camera.setExposureManual(exp)
     Camera.setResolution(160,120)
     cs.addCamera(Camera)
@@ -224,8 +247,6 @@ if __name__ == "__main__":
     # start cameras
     cameras = []
     cameras.append(startCamera(cameraConfigs[1]))
-
-
     #buffers to store img data
     img = np.zeros(shape=(160,120,3), dtype=np.uint8)
     ExpStatus = sp.getNumber('ExpAuto', 0)
@@ -257,3 +278,5 @@ if __name__ == "__main__":
 
         else:
             print("")
+        outputStream.putFrame(img)
+        time.sleep(10)

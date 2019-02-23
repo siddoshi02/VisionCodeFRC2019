@@ -100,6 +100,9 @@ def FindCenter(box):
     return center
 
 def TrackTheTape(frame, sd): # does the opencv image proccessing
+    neg = [-1,-1] # just a negative array to use when no tape is detected
+    centerL = neg
+    centerR = neg
     Exp = sd.getNumber('ExpAuto', 0)
     TapeLower= (65,75,75) # the lower bounds of the hsv
     TapeUpper = (80,255,255) # the upper bounds of hsv values
@@ -117,7 +120,6 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
     minArea = 75 # minimum area of either of the tapes
     a, cnts , b= cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     center = None
-    neg = [-1,-1] # just a negative array to use when no tape is detected
     if len(cnts) > 1: # if there is more than 1 contour
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
