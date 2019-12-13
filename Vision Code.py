@@ -112,6 +112,12 @@ def findSlope(box):
     else:
         return (box[1][1]-box[2][1])/(box[1][0]-box[2][0])
 
+def findRatio(box):
+    ratio = findDistance(box[2],box[3])/findDistance(box[1],box[2])
+    if abs(ratio)<1:
+        ratio = 1/ratio
+    return ratio
+
 def PrintBox(box):
     for i in box :
         print(i[0])
@@ -170,25 +176,25 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         c = cnts[0] # c is the largest contour
         d = cnts[1] # d is the second largest contour
         rect = cv2.minAreaRect(c)
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
+        boxL = cv2.boxPoints(rect)
+        boxL = np.int0(boxL)
         # for these refer to https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
         rect2 = cv2.minAreaRect(d)
-        box2 = cv2.boxPoints(rect2)
-        box2 = np.int0(box2)
+        boxR = cv2.boxPoints(rect2)
+        boxR = np.int0(boxR)
         if len(cnts) > 1:
-            centerL = FindCenter(box)
-            centerR = FindCenter(box2)
-            if findSlope(box)<findSlope(box2): # finds out which tape is on the left and right by comparing x coordinates
+            centerL = FindCenter(boxL)
+            centerR = FindCenter(boxR)
+            if findSlope(boxL)<findSlope(boxR): # finds out which tape is on the left and right by comparing x coordinates
                 centerL,centerR = centerR,centerL
-                box,box2 = box2,box
+                boxL,boxR = boxR,boxL
             avgArea = (cv2.contourArea(c) + cv2.contourArea(d))/2
             tape1 = centerL
             tape2 = centerR
             centerN[0] = (centerR[0]+centerL[0])/2
             centerN[1] = (centerR[1]+centerL[1])/2
-            cv2.drawContours(img,[box],0,(0,0,255),2)
-            cv2.drawContours(img,[box2],0,(0,255,0),2)
+            cv2.drawContours(img,[boxL],0,(0,0,255),2)
+            cv2.drawContours(img,[boxR],0,(0,255,0),2)
         else:
             # sd.putNumberArray('tape1', neg)
             # sd.putNumberArray('tape2', neg)
@@ -199,21 +205,21 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
         rect = cv2.minAreaRect(c)
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
+        boxL = cv2.boxPoints(rect)
+        boxL = np.int0(boxL)
         # for these refer to https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
         if len(cnts) >= 1:
-            center = FindCenter(box)
+            center = FindCenter(boxL)
             if center[0] < 80: # if there is only one tape detects wheter it is on the left or right
                 centerR = center
                 centerN = centerR
                 centerL = neg
-                cv2.drawContours(img,[box],0,(0,255,0),2)
+                cv2.drawContours(img,[boxL],0,(0,255,0),2)
             else:
                 centerL = center
                 centerN = centerL
                 centerR = neg
-                cv2.drawContours(img,[box],0,(0,0,255),2)
+                cv2.drawContours(img,[boxL],0,(0,0,255),2)
             avgArea = cv2.contourArea(c)
             tape1 = centerL
             tape2 = centerR
