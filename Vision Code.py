@@ -113,7 +113,9 @@ def findSlope(box):
         return (box[1][1]-box[2][1])/(box[1][0]-box[2][0])
 
 def findRatio(box):
-    ratio = findDistance(box[2],box[3])/findDistance(box[1],box[2])
+    long = findDistance(box[2],box[3])
+    short = findDistance(box[1],box[2])
+    ratio = long/short
     if abs(ratio)<1:
         ratio = 1/ratio
     return ratio
