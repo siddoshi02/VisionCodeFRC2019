@@ -117,13 +117,26 @@ def findRatio(box):
     short = findDistance(box[1],box[2])
     ratio = long/short
     if abs(ratio)<1:
-        ratio = 1/ratio
+        ratio = 1/ratio 
     return ratio
 
 def PrintBox(box):
     for i in box :
         print(i[0])
-        print(i[1])     
+        print(i[1])    
+
+CAMERA_WIDTH = 640
+FOV = 60
+DEG_PER_PIXEL = FOV/CAMERA_WIDTH
+
+def getImageSizeInDeg(width):
+    nPixels = width
+    return (nPixels * DEG_PER_PIXEL)
+
+def getTargetDistance(width):
+    radian = math.radians(getImageSizeInDeg(width))
+    distance = ((5.125) / (math.tan(radian)))
+    return distance
 
 def TrackTheTape(frame, sd): # does the opencv image proccessing
 
@@ -336,3 +349,5 @@ if __name__ == "__main__":
         # if loopCount%100 == 0:
         #     print(output)
         outputStream.putFrame(img)
+
+        
