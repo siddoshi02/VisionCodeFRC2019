@@ -138,6 +138,8 @@ def getTargetDistance(width):
     distance = ((5.125) / (math.tan(radian)))
     return distance
 
+# def ScaleHeight(height):
+ 
 def TrackTheTape(frame, sd): # does the opencv image proccessing
 
     # In bright lights
@@ -293,11 +295,11 @@ if __name__ == "__main__":
     cs = CameraServer.getInstance()
     cs.enableLogging()
     Camera = UsbCamera('Cam 0', 0)
-    exp = 2
-    Camera.setExposureManual(exp)
+    #exp = 2
+    #Camera.setExposureManual(exp)
     Camera.setResolution(160,120)
     cs.addCamera(Camera)
-    SmartDashBoardValues.putNumber('ExpAuto', 0)
+    #SmartDashBoardValues.putNumber('ExpAuto', 0)
 
     print("connected")
 
@@ -313,37 +315,37 @@ if __name__ == "__main__":
 
     #buffers to store img data
     img = np.zeros(shape=(160,120,3), dtype=np.uint8)
-    ExpStatus = SmartDashBoardValues.getNumber('ExpAuto', 0)
+    #ExpStatus = SmartDashBoardValues.getNumber('ExpAuto', 0)
     # loop forever
     loopCount = 0
-    while True:
-        output = ""
-        ExpAuto = SmartDashBoardValues.getNumber('ExpAuto', 0)
-
-        if ExpAuto == 0:
-            if ExpStatus == 1:
-                Camera.setExposureManual(exp)
-                ExpStatus = 0
-            GotFrame, img = CvSink.grabFrame(img)
-            if GotFrame  == 0:
-                outputStream.notifyError(CvSink.getError())
-                continue
-            img = TrackTheTape(img, SmartDashBoardValues)
-
-        elif ExpAuto == 1:
-                if ExpStatus == 0:
-                    Camera.setExposureAuto()
-                    ExpStatus = 1
-                neg = [-1,-1] # just a negative array to use when no tape is detected
-                SmartDashBoardValues.putNumberArray('tape1', neg)
-                SmartDashBoardValues.putNumberArray('tape2', neg)
-                GotFrame, img = CvSink.grabFrame(img)
-                if GotFrame  == 0:
-                    outputStream.notifyError(CvSink.getError())
-                    continue
-        else:
-            print("")
-        print("")
+    #while True:
+        # output = ""
+        # ExpAuto = SmartDashBoardValues.getNumber('ExpAuto', 0)
+        #
+        # if ExpAuto == 0:
+        #     if ExpStatus == 1:
+        #         Camera.setExposureManual(exp)
+        #         ExpStatus = 0
+        #     GotFrame, img = CvSink.grabFrame(img)
+        #     if GotFrame  == 0:
+        #         outputStream.notifyError(CvSink.getError())
+        #         continue
+        #     img = TrackTheTape(img, SmartDashBoardValues)
+        #
+        # elif ExpAuto == 1:
+        #         if ExpStatus == 0:
+        #             Camera.setExposureAuto()
+        #             ExpStatus = 1
+        #         neg = [-1,-1] # just a negative array to use when no tape is detected
+        #         SmartDashBoardValues.putNumberArray('tape1', neg)
+        #         SmartDashBoardValues.putNumberArray('tape2', neg)
+        #         GotFrame, img = CvSink.grabFrame(img)
+        #         if GotFrame  == 0:
+        #             outputStream.notifyError(CvSink.getError())
+        #             continue
+        # else:
+        #     print("")
+        # print("")
         # output += "dkjcd"
         # loopCount += 1
         # if loopCount%100 == 0:
