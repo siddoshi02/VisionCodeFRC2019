@@ -198,10 +198,10 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         rect2 = cv2.minAreaRect(d)
         boxR = cv2.boxPoints(rect2)
         boxR = np.int0(boxR)
-        if len(cnts) > 1:
-            centerL = FindCenter(boxL)
-            centerR = FindCenter(boxR)
-            if findSlope(boxL)<findSlope(boxR): # finds out which tape is on the left and right by comparing x coordinates
+        # if len(cnts) > 1:
+        #     centerL = FindCenter(boxL)
+        #     centerR = FindCenter(boxR)
+            if findSlope(boxL)<findSlope(boxR): # finds out which tape is on the left and right by comparing slopes
                 centerL,centerR = centerR,centerL
                 boxL,boxR = boxR,boxL
             avgArea = (cv2.contourArea(c) + cv2.contourArea(d))/2
@@ -219,28 +219,32 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
         rect = cv2.minAreaRect(c)
-        boxL = cv2.boxPoints(rect)
-        boxL = np.int0(boxL)
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)
+        boxL = None
+        boxR = None
         # for these refer to https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
-        if len(cnts) >= 1:
-            center = FindCenter(boxL)
-            if center[0] < 80: # if there is only one tape detects wheter it is on the left or right
-                centerR = center
-                centerN = centerR
-                centerL = neg
-                cv2.drawContours(img,[boxL],0,(0,255,0),2)
-            else:
-                centerL = center
-                centerN = centerL
-                centerR = neg
-                cv2.drawContours(img,[boxL],0,(0,0,255),2)
-            avgArea = cv2.contourArea(c)
-            tape1 = centerL
-            tape2 = centerR
+        # if len(cnts) >= 1:
+        center = FindCenter(box)
+        if findSlope(box)<=0: # if there is only one tape detects wheter it is on the left or right using the value of its slope
+            centerR = center
+            centerN = centerR
+            centerL = neg
+            boxR = box
+            cv2.drawContours(img,[boxR],0,(0,255,0),2)
         else:
-            tape1 = neg
-            tape2 = neg
-            avgArea = -1
+            centerL = center
+            centerN = centerL
+            centerR = neg
+            boxL = box
+            cv2.drawContours(img,[boxL],0,(0,0,255),2)
+        avgArea = cv2.contourArea(c)
+        tape1 = centerL
+        tape2 = centerR
+        # else:
+        #     tape1 = neg
+        #     tape2 = neg
+        #     avgArea = -1
 
     else: # when no tape is detected put the neg array everywhere
         tape1 = neg
@@ -297,10 +301,10 @@ if __name__ == "__main__":
     Camera = UsbCamera('Cam 1', 1)
     Camera.setResolution(640, 480)
     Camera.setFPS(60)
-    # Camera.setExposureManual(1)
-    # Camera.setBrightness(4)
-    Camera.getProperty("auto_exposure").set(1)
-    Camera.getProperty("exposure").set(0)
+    Camera.setBrightness(2)
+    Camera.setExposureManual(1)
+    Camera.getProperty("auto_exposure").set(0)
+    Camera.getProperty("exposure").set(1)
     mjpegServer = MjpegServer("serve_Cam 1", 1182)
     mjpegServer.setResolution(640, 480)
     mjpegServer.setSource(Camera)
