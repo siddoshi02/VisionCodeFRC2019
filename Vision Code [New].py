@@ -295,7 +295,7 @@ if __name__ == "__main__":
     print("connected")
 
     Camera = UsbCamera('Cam 1', 1)
-    Camera.setResolution(854, 480)
+    Camera.setResolution(640, 480)
     Camera.setFPS(60)
     # Camera.setExposureManual(1)
     # Camera.setBrightness(4)
