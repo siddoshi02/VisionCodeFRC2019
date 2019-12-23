@@ -201,20 +201,20 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         # if len(cnts) > 1:
         #     centerL = FindCenter(boxL)
         #     centerR = FindCenter(boxR)
-            if findSlope(boxL)<findSlope(boxR): # finds out which tape is on the left and right by comparing slopes
-                centerL,centerR = centerR,centerL
-                boxL,boxR = boxR,boxL
-            avgArea = (cv2.contourArea(c) + cv2.contourArea(d))/2
-            tape1 = centerL
-            tape2 = centerR
-            centerN[0] = (centerR[0]+centerL[0])/2
-            centerN[1] = (centerR[1]+centerL[1])/2
-            cv2.drawContours(img,[boxL],0,(0,0,255),2)
-            cv2.drawContours(img,[boxR],0,(0,255,0),2)
-        else:
-            tape1 = neg
-            tape2 = neg
-            avgArea = -1
+        if findSlope(boxL)<findSlope(boxR): # finds out which tape is on the left and right by comparing slopes
+            centerL,centerR = centerR,centerL
+            boxL,boxR = boxR,boxL
+        avgArea = (cv2.contourArea(c) + cv2.contourArea(d))/2
+        tape1 = centerL
+        tape2 = centerR
+        centerN[0] = (centerR[0]+centerL[0])/2
+        centerN[1] = (centerR[1]+centerL[1])/2
+        cv2.drawContours(img,[boxL],0,(0,0,255),2)
+        cv2.drawContours(img,[boxR],0,(0,255,0),2)
+        # else:
+        #     tape1 = neg
+        #     tape2 = neg
+        #     avgArea = -1
     elif len(cnts) == 1: # if there is 1 contour
         sorted(cnts, key=cv2.contourArea, reverse=True) #sorts the array with all the contours so those with the largest area are first
         c = cnts[0] # c is the largest contour
@@ -245,7 +245,6 @@ def TrackTheTape(frame, sd): # does the opencv image proccessing
         #     tape1 = neg
         #     tape2 = neg
         #     avgArea = -1
-
     else: # when no tape is detected put the neg array everywhere
         tape1 = neg
         tape2 = neg
@@ -289,31 +288,39 @@ if __name__ == "__main__":
     SmartDashBoardValues.setPersistent("VU")
 
     #Start first camera
-    print("Connecting to camera 0")
+    print("Connecting to camera 1SSSS")
     cs = CameraServer.getInstance()
     cs.enableLogging()
     Camera = UsbCamera('Cam 0', 0)
-    Camera.setResolution(640,480)
     cs.addCamera(Camera)
 
     print("connected")
 
-    Camera = UsbCamera('Cam 1', 1)
-    Camera.setResolution(640, 480)
+    Camera.setResolution(480, 270)
     Camera.setFPS(60)
-    Camera.setBrightness(2)
-    Camera.setExposureManual(1)
-    Camera.getProperty("auto_exposure").set(0)
-    Camera.getProperty("exposure").set(1)
+    Camera.getProperty("")
+    Camera.getProperty("connect_verbose").set(1)
+    Camera.getProperty("contrast").set(12)
+    Camera.getProperty("saturation").set(12)
+    Camera.getProperty("gain").set(25)
+    Camera.getProperty("white_balance_temperature").set(4150)
+    Camera.getProperty("sharpness").set(9)
+    Camera.getProperty("backlight_compensation").set(1)
+    # Camera.getProperty("exposure_absolute").set(1)
+    Camera.getProperty("brightness").set(5)
+    # Camera.getProperty("exposure_auto").set(0)
+    # Camera.getProperty("exposure_auto_priority").set(0)
+    # Camera.getProperty("auto_exposure").set(0)
+    # Camera.getProperty("exposure").set(0)
     mjpegServer = MjpegServer("serve_Cam 1", 1182)
-    mjpegServer.setResolution(640, 480)
+    mjpegServer.setResolution(480, 270)
     mjpegServer.setSource(Camera)
 
     CvSink = cs.getVideo()
-    outputStream = cs.putVideo("Processed Frames", 640, 480)
+    outputStream = cs.putVideo("Processed Frames", 480, 270)
 
     #buffers to store img data
-    img = np.zeros(shape=(640,480,3), dtype=np.uint8)
+    img = np.zeros(shape=(480,270,3), dtype=np.uint8)
 
     # loop forever
     loopCount = 0
