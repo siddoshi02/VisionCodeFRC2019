@@ -302,8 +302,11 @@ if __name__ == "__main__":
 
     print("connected")
 
-    Camera.setResolution(480, 270)
-    Camera.setFPS(60)
+    fps = 60
+    width, height = 480, 270
+
+    Camera.setResolution(width, height)
+    Camera.setFPS(fps)
     # Camera.getProperty("width").set(480)
     # Camera.getProperty("height").set(270)
     # Camera.getProperty("fps").set(60)
@@ -325,14 +328,14 @@ if __name__ == "__main__":
     Camera.getProperty("exposure_auto").set(1)
     # Camera.getProperty("exposure_auto_priority").set(0)
     mjpegServer = MjpegServer("serve_Cam 1", 1182)
-    mjpegServer.setResolution(480, 270)
+    mjpegServer.setResolution(width, height)
     mjpegServer.setSource(Camera)
 
     CvSink = cs.getVideo()
-    outputStream = cs.putVideo("Processed Frames", 480, 270)
+    outputStream = cs.putVideo("Processed Frames", width, height)
 
     #buffers to store img data
-    img = np.zeros(shape=(480,270,3), dtype=np.uint8)
+    img = np.zeros(shape=(width,height,3), dtype=np.uint8)
 
     # loop forever
     loopCount = 0
