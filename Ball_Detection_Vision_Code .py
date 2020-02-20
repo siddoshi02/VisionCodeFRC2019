@@ -179,7 +179,7 @@ def TrackTheBall(frame, sd): # does the opencv image proccessing
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-        if radius > 10:
+        if radius > 5:
             cv2.circle(frame, (int(x), int(y)), int(radius),(0, 255, 255), 2)
             cv2.circle(frame, center, 5, (0,0,255), -1)
     pts.appendleft(center)
@@ -237,16 +237,16 @@ if __name__ == "__main__":
     print("connected")
 
     fps = 60
-    width, height = 480, 270
+    width, height = 720, 405
 
     Camera.setResolution(width, height)
     Camera.setFPS(fps)
-    Camera.getProperty("exposure_auto").set(1)
-    # Camera.getProperty("brightness").set(5)
-    # Camera.getProperty("gain").set(0)
-    # Camera.getProperty("contrast").set(5)
-    # Camera.getProperty("saturation").set(7)
-    # Camera.getProperty("exposure_absolute").set(6)
+    # Camera.getProperty("exposure_auto").set(1)
+    Camera.getProperty("brightness").set(5)
+    Camera.getProperty("gain").set(0)
+    Camera.getProperty("contrast").set(5)
+    Camera.getProperty("saturation").set(7)
+    Camera.getProperty("exposure_absolute").set(6)
 
     mjpegServer = MjpegServer("serve_Cam 1", 1182)
     mjpegServer.setResolution(width, height)
