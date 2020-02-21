@@ -21,13 +21,6 @@ team = 7539
 server = False
 cameraConfigs = []
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-v", "--video",
-	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=64,
-	help="max buffer size")
-args = vars(ap.parse_args())
-
 """Report parse error."""
 def parseError(str):
     print("config error in '" + configFile + "': " + str, file=sys.stderr)
@@ -163,34 +156,25 @@ def TrackTheBall(frame, sd): # does the opencv image proccessing
 
     # frame = cv2.GaussianBlur(frame, (11,11), 0)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) # creates a binary image with only the parts within the bounds True
-
     mask = cv2.inRange(hsv, BallLower, BallUpper) # cuts out all the useless stuff
     mask = cv2.erode(mask, None, iterations = 2)
     mask= cv2.dilate(mask, None, iterations = 2)
-    pts = deque(maxlen=args["buffer"])
-
     minArea = 1000 # minimum area of either of the ball
     a, cnts, b = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # cnts = imutils.grab_contours(cnts)
     center = None
-    if len(cnts) > 0:
-        c = max(cnts, key=cv2.contourArea)
-        ((x,y), radius) = cv2.minEnclosingCircle(c)
-        M = cv2.moments(c)
-        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+    for j in range(5):
+        if len(cnts) > 0:
+            c = max(cnts, key=cv2.contourArea)
+            cnts.remove(c)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            M = cv2.moments(c)
+            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-        if radius > 5:
-            cv2.circle(frame, (int(x), int(y)), int(radius),(0, 255, 255), 2)
-            cv2.circle(frame, center, 5, (0,0,255), -1)
-    pts.appendleft(center)
-    for i in range(1, len(pts)):
-        if pts[i-1] is None or pts[i] is None:
-            continue
-        thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
-        cv2.line(frame, pts[i-1], pts[i], (0,0,255), thickness)
-
-
-    # neg = [-1,-1] # just a negative array to use when no tape is detected
+            if radius > 5:
+                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                cv2.circle(frame, center, 5, (0, 0, 255), -1)            
+	# neg = [-1,-1] # just a negative array to use when no tape is detected
     # sorted(cnts, key=cv2.contourArea, reverse=True)
     # cnts2 = []
     # for cur in cnts:
@@ -237,7 +221,7 @@ if __name__ == "__main__":
     print("connected")
 
     fps = 60
-    width, height = 720, 405
+    width, height = 480, 270
 
     Camera.setResolution(width, height)
     Camera.setFPS(fps)
