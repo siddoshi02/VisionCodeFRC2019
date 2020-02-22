@@ -136,14 +136,14 @@ def TrackTheBall(frame, sd): # does the opencv image proccessing
         if len(cnts) > 0:
             c = cnts[j]
             ((x, y), radius) = cv2.minEnclosingCircle(c)#finds the circle in the contour
-            M = cv2.moments(c)
+            M = cv2.moments(c)#finds the center of the circle
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
             if radius > 10 :
                 cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)#draws the circle around the co-ordinates on the output image
                 cv2.circle(frame, center, 5, (0, 0, 255), -1)#draws the center of the circle onto the output image
-    for i in cnts:
-        sd.putNumberArray('Ball', i)
+                sd.putNumber('Center'+str(j), center)
+                sd.putNumber('Radius'+str(j), radius)
     return frame
 
 
