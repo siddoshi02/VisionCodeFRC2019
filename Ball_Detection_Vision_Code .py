@@ -7,7 +7,6 @@ import numpy as np
 import math
 import cv2
 import argparse
-# import imutils
 from collections import deque
 
 from cscore import CameraServer, VideoSource, CvSource, VideoMode, CvSink, UsbCamera, CameraServer, MjpegServer
@@ -16,6 +15,8 @@ from networktables import NetworkTablesInstance
 configFile = "/boot/frc.json"
 
 class CameraConfig: pass
+#Camera number can vary based on the model of the camera being used. 1 = Logitech C310, 2 = Microsoft Lifecam
+camera_number = 2
 
 team = 7539
 server = False
@@ -95,54 +96,25 @@ def readConfig():
 
     return True
 
-# returns an array of the center coordinates
-def FindCenter(box):
-    center = [0,0]
-    for i in box:
-        center[0] += i[0]
-        center[1] += i[1]
-    center[0] = center[0]/4
-    center[1] = center[1]/4
-    return center
-
-def findDistance(c1,c2):
-    return math.sqrt((math.pow(c1[0]-c2[0],2))+(math.pow(c1[1]-c2[1],2)))
-
-def findSlope(box):
-
-    if(findDistance(box[0],box[1])>findDistance(box[1],box[2])):
-        if box[0][0]-box[1][0]==0:
-            return 1
-        else:
-            return (box[0][1]-box[1][1])/(box[0][0]-box[1][0])
-    else:
-        if box[1][0]-box[2][0]==0:
-            return 1
-        else:
-            return (box[1][1]-box[2][1])/(box[1][0]-box[2][0])
-
-def findRatio(box):
-    long = findDistance(box[2],box[3])
-    short = findDistance(box[1],box[2])
-    ratio = long/short
-    if abs(ratio)<1:
-        ratio = 1/ratio
-    return ratio
-
-def PrintBox(box):
-    for i in box :
-        print(i[0])
-        print(i[1])
 
 def TrackTheBall(frame, sd): # does the opencv image proccessing
 
+
     try:
-        HL = sd.getNumber('HL', 26)
-        HU = sd.getNumber('HU', 35)
-        SL = sd.getNumber('SL', 71)
-        SU = sd.getNumber('SU', 255)
-        VL = sd.getNumber('VL', 53)
-        VU = sd.getNumber('VU', 154)
+        if camera_number == 1:
+            HL = sd.getNumber('HL', 26)
+            HU = sd.getNumber('HU', 35)
+            SL = sd.getNumber('SL', 71)
+            SU = sd.getNumber('SU', 255)
+            VL = sd.getNumber('VL', 53)
+            VU = sd.getNumber('VU', 154)
+        elif camera_number == 2:
+            HL = sd.getNumber('HL', 19)
+            HU = sd.getNumber('HU', 41)
+            SL = sd.getNumber('SL', 237)
+            SU = sd.getNumber('SU', 255)
+            VL = sd.getNumber('VL', 67)
+            VU = sd.getNumber('VU', 135)
         BallLower = (HL,SL,VL)
         BallUpper = (HU,SU,VU)
         print("HSV lower:%s HSV Upper:%s" % (BallLower, BallUpper))
@@ -154,37 +126,24 @@ def TrackTheBall(frame, sd): # does the opencv image proccessing
     else:
         sd.putNumber('GettingFrameData',True)
 
-    # frame = cv2.GaussianBlur(frame, (11,11), 0)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) # creates a binary image with only the parts within the bounds True
     mask = cv2.inRange(hsv, BallLower, BallUpper) # cuts out all the useless stuff
     mask = cv2.erode(mask, None, iterations = 2)
     mask= cv2.dilate(mask, None, iterations = 2)
-    minArea = 1000 # minimum area of either of the ball
-    a, cnts, b = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # cnts = imutils.grab_contours(cnts)
-    center = None
-    for j in range(5):
+    a, cnts, b = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)#finds pixels grouped together
+    sorted(cnts, key=cv2.contourArea, reverse=True)
+    for j in range(0, len(cnts)):
         if len(cnts) > 0:
-            c = max(cnts, key=cv2.contourArea)
-            cnts.remove(c)
-            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            c = cnts[j]
+            ((x, y), radius) = cv2.minEnclosingCircle(c)#finds the circle in the contour
             M = cv2.moments(c)
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-            if radius > 5:
-                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-                cv2.circle(frame, center, 5, (0, 0, 255), -1)            
-	# neg = [-1,-1] # just a negative array to use when no tape is detected
-    # sorted(cnts, key=cv2.contourArea, reverse=True)
-    # cnts2 = []
-    # for cur in cnts:
-    #     if cv2.contourArea(cur) >= minArea:
-    #         cnts2.append(cur)
-    # cnts = cnts2
-    # cv2.drawContours(img,cnts,-1,(0,0,255),2)
-    # detector = cv2.SimpleBlobDetector()
-    # for i in cnts:
-    #     sd.putNumberArray('Ball', i);
+            if radius > 10 :
+                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)#draws the circle around the co-ordinates on the output image
+                cv2.circle(frame, center, 5, (0, 0, 255), -1)#draws the center of the circle onto the output image
+    for i in cnts:
+        sd.putNumberArray('Ball', i)
     return frame
 
 
@@ -211,7 +170,7 @@ if __name__ == "__main__":
     SmartDashBoardValues.setPersistent("VL")
     SmartDashBoardValues.setPersistent("VU")
 
-    #Start first camera
+    #Start camera
     print("Connecting to camera 1SSSS")
     cs = CameraServer.getInstance()
     cs.enableLogging()
@@ -229,7 +188,10 @@ if __name__ == "__main__":
     Camera.getProperty("brightness").set(5)
     Camera.getProperty("gain").set(0)
     Camera.getProperty("contrast").set(5)
-    Camera.getProperty("saturation").set(7)
+    if camera_number == 1:
+        Camera.getProperty("saturation").set(7)
+    elif camera_number == 2:
+        Camera.getProperty("saturation").set(69)
     Camera.getProperty("exposure_absolute").set(6)
 
     mjpegServer = MjpegServer("serve_Cam 1", 1182)
